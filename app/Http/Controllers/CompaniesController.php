@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Companies;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 
 class CompaniesController extends Controller
 {
@@ -27,7 +30,17 @@ class CompaniesController extends Controller
             ], 400);
         }
 
-        $companies = Companies::with('user', 'rating')->get();
+        $companies = Companies::with('user')->get();
+
+        $validatorRelationship = Validator::make(['companied' => $companies], [
+            'companies.*.user' => 'required|exists:users,id',
+        ]);
+
+        if ($validatorRelationship->fails()) {
+            return response()->json([
+                'errors' => $validatorRelationship->errors(),
+                'message' => "Error relationship"
+            ], 422);}
 
         $format = $companies->map(function($companies) {
             return [
@@ -39,7 +52,6 @@ class CompaniesController extends Controller
                 'slug' => $companies->slug,
                 'content' => $companies->content,
                 'link' => $companies->link,
-                'rating' => $companies->rating,
                 'user' => $companies->user,
                 'created_at' => $companies->created_at,
                 'updated_at' => $companies->updated_at
@@ -74,7 +86,6 @@ class CompaniesController extends Controller
             'slug' => 'required|string|max:100',
             'content' => 'nullable|string',
             'link' => 'nullable|url',
-            'rating' => 'nullable|'
         ]);
 
         if ($validator->fails()) {
@@ -86,7 +97,7 @@ class CompaniesController extends Controller
             ], 400);
         }
 
-        $company = Companies::create([
+        $companies = Companies::create([
             'representative' => $request->representative,
             'company_name' => $request->company_name,
             'short_name' => $request->short_name,
@@ -94,11 +105,29 @@ class CompaniesController extends Controller
             'slug' => $request->slug,
             'content' => $request->content,
             'link' => $request->link,
+            'user_id' => $request->user_id,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
+        $format = [
+            'id' => $companies->id,
+            'representative' => $companies->representative,
+            'company_name' => $companies->company_name,
+            'short_name' => $companies->short_name,
+            'phone_number' =>  $companies->phone_number,
+            'slug' => $companies->slug,
+            'content' => $companies->content,
+            'link' => $companies->link,
+            'user' => $companies->user,
+            'created_at' => $companies->created_at,
+            'updated_at' => $companies->updated_at
+        ];
+
         return response()->json([
+            'status' => 'Success',
             'message' => 'Company created successfully',
-            'data' => $company,
+            'data' => $format,
         ], 201);
     }
 
@@ -107,7 +136,7 @@ class CompaniesController extends Controller
      */
     public function show(string $id)
     {
-        $companies = Companies::with('user', 'rating')->find($id);
+        $companies = Companies::with('user')->find($id);
 
         if($companies == null) {
             return response()->json([
@@ -125,7 +154,6 @@ class CompaniesController extends Controller
             'slug' => $companies->slug,
             'content' => $companies->content,
             'link' => $companies->link,
-            'rating' => $companies->rating,
             'user' => $companies->user,
             'created_at' => $companies->created_at,
             'updated_at' => $companies->updated_at
@@ -152,7 +180,47 @@ class CompaniesController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        try{
+            // Validate data
+            $validatedData = $request->validate([
+                'representative' => 'required|string|max:255',
+                'company_name' => 'required|string|max:255',
+                'short_name' => 'required|string|max:255',
+                'phone_number' => 'required|string|max:20',
+                'slug' => 'required|string|max:255|unique:companies,slug,' . $id,
+                'content' => 'nullable|string',
+                'link' => 'nullable|url',
+                'user_id' => 'required|exists:users,id',
+            ]);
+
+            $company = Companies::findOrFail($id);
+            $company->update($validatedData);
+
+            return response()->json([
+                'status' => "Success",
+                'message' => "Update company success",
+                'data' => $company
+            ]);
+        } catch (ValidationException $e) {
+            // Handling authentication errors
+            return response()->json([
+                'status' => 'Error',
+                'message' => $e->validator->errors()
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (ModelNotFoundException $e) {
+            // Handling cases where the company is not found
+            return response()->json([
+                'status' => 'Error',
+                'message' => 'Company not found'
+            ], Response::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            // Handle other errors (e.g. database errors)
+            return response()->json([
+                'status' => 'Error',
+                'message' => 'An error occurred', 'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
     }
 
     /**
@@ -160,6 +228,26 @@ class CompaniesController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        try {
+            $company = Companies::findOrFail($id);
+            $company->delete();
+
+            return response()->json([
+                'status' => "Success",
+                'message' => 'Company deleted successfully'
+            ], Response::HTTP_OK);
+        } catch (ModelNotFoundException $e) {
+            // Handling cases where the company is not found
+            return response()->json([
+                'status' => 'Error',
+                'message' => 'Company not found'
+            ], Response::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            // Handle other errors
+            return response()->json([
+                'status' => 'Error',
+                'message' => 'An error occurred', 'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }
