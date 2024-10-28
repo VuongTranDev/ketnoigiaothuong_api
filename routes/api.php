@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\AddressController;
+use App\Http\Controllers\CategoriesController;
 use App\Http\Controllers\CompaniesController;
+use App\Http\Controllers\CompanyCategoryController;
 use App\Http\Controllers\NewsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -29,4 +32,6 @@ Route::fallback(function () {
 
 Route::apiResource('/company', CompaniesController::class);
 Route::apiResource('/new', NewsController::class);
-
+Route::apiResource('/category', CategoriesController::class);
+Route::apiResource('/company-category', CompanyCategoryController::class);
+Route::apiResource('/address', AddressController::class);
