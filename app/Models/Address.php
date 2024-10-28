@@ -8,8 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 class Address extends Model
 {
     use HasFactory;
-    public function companies(){
-        return $this->belongsTo(Companies::class,'company_id');
+    public $timestamps = true;
+    protected $fillable = [
+        'details',
+        'address',
+        'company_id'
+    ];
+    public function companies()
+    {
+        return $this->belongsTo(Companies::class, 'company_id');
     }
-
 }
