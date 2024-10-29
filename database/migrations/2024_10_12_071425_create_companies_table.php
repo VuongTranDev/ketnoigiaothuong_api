@@ -13,11 +13,8 @@ return new class extends Migration
     {
         Schema::create('companies', function (Blueprint $table) {
             $table->id();
-            // người đại diện
             $table->string('representative',255)->unique()->nullable();
-            // tên đầy đủ của công ty
             $table->string('company_name')->unique()->nullable();
-            // tên thường gọi của công ty
             $table->string('short_name')->nullable();
             $table->string('phone_number')->nullable();
             $table->string('slug')->nullable();
