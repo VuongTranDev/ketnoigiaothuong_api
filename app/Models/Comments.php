@@ -11,7 +11,13 @@ class Comments extends Model
     public function news(){
         return $this->belongsTo(News::class,'new_id','id');
     }
-    public function user(){
-        return $this->belongsTo(User::class,'user_id','id');
+    public function users(){
+        return $this->belongsTo(Users::class,'user_id','id');
     }
+
+    protected $fillable = [
+        'content', // Đảm bảo rằng tên cột này chính xác
+        'user_id',
+        'new_id',
+    ];
 }
