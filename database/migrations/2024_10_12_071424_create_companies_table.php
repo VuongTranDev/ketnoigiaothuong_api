@@ -22,7 +22,6 @@ return new class extends Migration
             $table->string('phone_number')->nullable();
             $table->string('slug')->nullable();
             $table->string('content')->nullable();
-            $table->foreignId('rating_id')->constrained('ratings','id')->cascadeOnDelete();
             $table->string('link',255)->unique()->nullable();
             $table->foreignId('user_id')->constrained('users','id')->cascadeOnDelete();
             $table->timestamps();

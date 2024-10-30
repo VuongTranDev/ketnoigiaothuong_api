@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('content')->nullable();
             $table->integer('numberstart')->nullable();
+            $table->foreignId('company_id')->constrained('companies','id')->cascadeOnDelete();
             $table->timestamps();
         });
     }
