@@ -29,7 +29,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::apiResource('comments', CommentAPIController::class);
 
-Route::post('stattisticMB', ReportAPIController::class)->name('statisticMember') ;
+// Route::post('stattisticMB', ReportAPIController::class)->name('statisticMember') ;
 
 
 Route::fallback(function () {
